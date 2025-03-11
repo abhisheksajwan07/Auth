@@ -55,11 +55,12 @@ const registerUser = async (req, res) => {
     };
     await transporter.sendMail(mailOption);
     res.status(201).json({
-      message: "user registered succesfully",
+      message:
+        "user registered succesfully.Please check your email to verify youraccount.",
       success: true,
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(500).json({
       message: "internally server error",
       error,
       success: false,
@@ -79,13 +80,21 @@ const verifyUser = async (req, res) => {
   if (!token) {
     return res.status(400).json({ message: "Invalid token" });
   }
-  const user = await User.findOne({ verificationToken: token });
-  if (!user) {
-    return res.status(400).json({ message: "Invalid token" });
+  try {
+    const user = await User.findOne({ verificationToken: token });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+    user.isVerfied = true;
+    user.verificationToken = undefined;
+    await user.save();
+    res
+      .status(200)
+      .json({ message: "Email verified successfully", success: true });
+  } catch (error) {
+    console.error("Verification error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-  user.isVerfied = true;
-  user.verificationToken = undefined;
-  await user.save();
 };
 
 const login = async (req, res) => {
@@ -130,6 +139,9 @@ const login = async (req, res) => {
         role: user.role,
       },
     });
-  } catch (err) {}
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 export { registerUser, verifyUser, login };
