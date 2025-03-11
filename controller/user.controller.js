@@ -13,12 +13,13 @@ const registerUser = async (req, res) => {
   //send token as email to user
   //send success status to user
   const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({
-      message: "All fields are required",
-    });
-  }
+
   try {
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -59,7 +60,7 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({
-      message: "user registered succesfully",
+      message: "internally server error",
       error,
       success: false,
     });
@@ -125,10 +126,10 @@ const login = async (req, res) => {
       token,
       user: {
         id: user._id,
-        name: suer.name,
+        name: user.name,
         role: user.role,
       },
     });
   } catch (err) {}
 };
-export { registerUser, verifyUser };
+export { registerUser, verifyUser, login };
