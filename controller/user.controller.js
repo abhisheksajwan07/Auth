@@ -2,6 +2,7 @@ import User from "../model/User.model.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
+import { sendEmail } from "../utils/email.js";
 import jwt from "jsonwebtoken";
 const registerUser = async (req, res) => {
   //get data
@@ -38,22 +39,29 @@ const registerUser = async (req, res) => {
     user.verificationToken = token;
     await user.save(); // user saved in db await use because always remember backend dusre continent m hai
     // send email
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAILTRAP_HOST,
-      port: process.env.MAILTRAP_PORT,
-      secure: false, // true for port 465, false for other ports
-      auth: {
-        user: process.env.MAILTRAP_USERNAME,
-        pass: process.env.MAILTRAP_PASSWORD,
-      },
-    });
-    const mailOption = {
-      from: process.env.MAILTRAP_SENDERMAIL, // sender address
-      to: user.email, // not User email
-      subject: "Verify your email", // Subject line
-      text: `Please click on the following link:${process.env.BASE_URL}/api/v1/users/verify/${token}`, // plain text body
-    };
-    await transporter.sendMail(mailOption);
+    // const transporter = nodemailer.createTransport({
+    //   host: process.env.MAILTRAP_HOST,
+    //   port: process.env.MAILTRAP_PORT,
+    //   secure: false, // true for port 465, false for other ports
+    //   auth: {
+    //     user: process.env.MAILTRAP_USERNAME,
+    //     pass: process.env.MAILTRAP_PASSWORD,
+    //   },
+    // });
+    // const mailOption = {
+    //   from: process.env.MAILTRAP_SENDERMAIL, // sender address
+    //   to: user.email, // not User email
+    //   subject: "Verify your email", // Subject line
+    //   text: `Please click on the following link:${process.env.BASE_URL}/api/v1/users/verify/${token}`, // plain text body
+    // };
+    // await transporter.sendMail(mailOption);
+
+    const verficationLink = `${process.env.BASE_URL}/api/v1/users/verify/${token}`;
+    await sendEmail(
+      user.email,
+      "Verify your email",
+      `Please click the following link:${verficationLink}`
+    );
     res.status(201).json({
       message:
         "user registered succesfully.Please check your email to verify youraccount.",
@@ -76,7 +84,7 @@ const verifyUser = async (req, res) => {
   //remove verification token
   //save //return response
   const { token } = req.params;
-  console.log(token);
+  // console.log(token);
   if (!token) {
     return res.status(400).json({ message: "Invalid token" });
   }
@@ -141,7 +149,28 @@ const login = async (req, res) => {
     });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
-export { registerUser, verifyUser, login };
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
+    }
+    //generate token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+    // create reset link
+    const resetLink = `${process.env.BASE_URL}/api/v1/users/reset-password/${resetToken}`;
+    await sendEmail(
+      user.email,
+      "Reset your password",
+      `Click the link to reset your password: ${resetLink}`
+    );
+  } catch {}
+};
+export { registerUser, verifyUser, login, forgotPassword };
