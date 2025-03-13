@@ -93,7 +93,7 @@ const verifyUser = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "Invalid token" });
     }
-    user.isVerfied = true;
+    user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
     res
@@ -128,7 +128,7 @@ const login = async (req, res) => {
     }
     const token = jwt.sign(
       { id: user._id, role: user.role }, // Payload (User Data)
-      "shhhh", // Secret Key
+      process.env.JWT_SECRET,
       { expiresIn: "24h" } // Expiration Time
     );
     const cookieOptions = {
@@ -171,6 +171,47 @@ const forgotPassword = async (req, res) => {
       "Reset your password",
       `Click the link to reset your password: ${resetLink}`
     );
-  } catch {}
+    res.status(200).json({
+      message: "Password reset link sent to your email",
+      success: true,
+    });
+  } catch (error) {
+    console.error("forgot passwrod :", error);
+    res.status(500).json({
+      messgea: "internal error",
+      success: false,
+    });
+  }
 };
-export { registerUser, verifyUser, login, forgotPassword };
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+  if (!newPassword) {
+    return res.status(400).json({
+      message: "new password",
+    });
+  }
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.status(400).json({ message: "invalid or expired token" });
+    }
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+    res.status(200).json({
+      mesage: "password is reset",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "something went wrong",
+      success: false,
+    });
+  }
+};
+export { registerUser, verifyUser, login, forgotPassword, resetPassword };
