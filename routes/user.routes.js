@@ -2,7 +2,7 @@ import express from "express";
 import {
   registerUser,
   verifyUser,
-  login,
+  login,forgotPassword,resetPassword
 } from "../controller/user.controller.js";
 const router = express.Router();
 router.post("/register", registerUser);
