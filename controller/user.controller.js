@@ -79,6 +79,9 @@ const login = async (req, res) => {
       secure: true,
       maxAge: 24 * 60 * 60 * 1000,
     });
+    console.log("Entered Password:", password);
+    console.log("Stored Hashed Password:", user.password);
+
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -129,7 +132,9 @@ const resetPassword = async (req, res) => {
     });
     if (!user)
       return res.status(400).json({ message: "Invalid or expired token" });
-    user.password = await bcrypt.hash(newPassword, 10);
+    user.password = newPassword;
+    console.log("New Password (hashed):", user.password);
+
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
