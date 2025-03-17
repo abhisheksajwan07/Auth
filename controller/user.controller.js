@@ -57,18 +57,25 @@ const verifyUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error", success: false });
   }
 };
-const getMe = async(req,res){
-  try{
+const getMe = async (req, res) => {
+  try {
+    const user= await User.findById(req.user.id).select("-password")
+   
+    if (!user) {
+      return res.status(400).json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({success:false,user:"data"})
+  } catch (error) {
+    console.log("Error in getMe:", error.message);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+// const logoutUser = async(req,res){
+//   try{
 
-  }
-  catch(error){}
-}
-const logoutUser = async(req,res){
-  try{
-    
-  }
-  catch(error){}
-}
+//   }
+//   catch(error){}
+// }
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -157,4 +164,11 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export { registerUser, verifyUser, login, forgotPassword, resetPassword,getMe,logoutUser };
+export {
+  registerUser,
+  verifyUser,
+  login,
+  forgotPassword,
+  resetPassword,
+  getMe,
+};

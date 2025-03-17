@@ -1,3 +1,4 @@
+import jwt from"jsonwebtoken";
 export const isLoggedIn = async (req, res, next) => {
   try {
     console.log(req.cookies);
@@ -19,5 +20,5 @@ export const isLoggedIn = async (req, res, next) => {
       message: "interval server error"
     });
   }
-  next();
+  
 };
