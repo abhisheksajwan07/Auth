@@ -57,7 +57,18 @@ const verifyUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error", success: false });
   }
 };
+const getMe = async(req,res){
+  try{
 
+  }
+  catch(error){}
+}
+const logoutUser = async(req,res){
+  try{
+    
+  }
+  catch(error){}
+}
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -79,8 +90,8 @@ const login = async (req, res) => {
       secure: true,
       maxAge: 24 * 60 * 60 * 1000,
     });
-    console.log("Entered Password:", password);
-    console.log("Stored Hashed Password:", user.password);
+    // console.log("Entered Password:", password);
+    // console.log("Stored Hashed Password:", user.password);
 
     res.status(200).json({
       success: true,
@@ -146,4 +157,4 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export { registerUser, verifyUser, login, forgotPassword, resetPassword };
+export { registerUser, verifyUser, login, forgotPassword, resetPassword,getMe,logoutUser };
